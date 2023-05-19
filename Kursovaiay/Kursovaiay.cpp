@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <cmath>
 using namespace std;
+#include <list>
 
 
 double Met1TOCH(double t) 
@@ -58,7 +59,7 @@ void RungeKutta(int count, double (**f)(double t, double* y), double** y, double
         }
         for (int j = 0;j < count;j++)
         {
-            k3[j] = f[j](t[i] + h, vectorY);
+            k4[j] = f[j](t[i] + h, vectorY);
         }
         delete[] vectorY;
         for (int j = 0;j < count;j++)
@@ -124,12 +125,121 @@ std::pair<double, double> testTask(int numberDivisions) {
     return res;
 }
 
+void PrintVectors(double x[],int n,string nameVector) 
+{
+    std::cout << nameVector;
+    std::cout << "=[";
+    for (int i = 0; i < n;i++) 
+    {
+        std::cout << x[i] << "," << " " ;
+    }
+    std::cout << "];" << "\n";
+}
+void zadanie_41()
+{
+    const int n = 50;
+    double x[n];
+    double y[n];
+    for (int i = 0; i < n; i++) {
+        std::pair<double, double> inaccuracy = testTask(i + 100);
+        x[i] = inaccuracy.first;
+        y[i] = inaccuracy.second / pow(x[i], 4);
+        //std::cout << inaccuracy.first << "," << inaccuracy.second << "\n";
+    }
+    PrintVectors(x, n, "x");
+    PrintVectors(y, n, "y");
+}
+
+double Betta = 0.13;
+int gamma = 5;
+double X0 = 0.5;
+double Y0 = 0.5;
+const double alpha=4.3;
+double v = 9;
+
+double Met_X(double t, double* y)
+{
+    return gamma*(1 - y[0])*y[0] - (alpha*y[0]*y[1] / (Betta + y[0]));
+}
+
+double Met_Y(double t, double* y)
+{
+    return (1-(y[1]/y[0]))*y[1];
+}
+const int numberDivisions = 300;
+void predator_prey() {
+    double h = v / numberDivisions; //задание шага метода
+    double* y1 = new double[numberDivisions]();
+    double* y2 = new double[numberDivisions]();
+    double* t = new double[numberDivisions];
+    for (int i = 0; i < numberDivisions; i++) {
+        t[i] = h * i; //создание оси t
+    }
+    double (**f)(double t, double* y) = new pFunc[2]; //объявление набора функций
+    f[0] = Met_X;
+    f[1] = Met_Y;
+    double** y = new double* [numberDivisions]; //выделение памяти для решения системы
+    for (int i = 0; i < numberDivisions; i++) {
+        y[i] = new double[2]();
+    }
+    double* y0 = new (double[2]); //начальные условия
+    y0[0] = X0;
+    y0[1] = Y0;
+    RungeKutta(2, f, y, h, numberDivisions, t, y0);
+    double masX[numberDivisions];
+    double masY[numberDivisions];
+    for (int i = 0; i < numberDivisions; i++) 
+    {
+        masX[i] = y[i][0];
+        masY[i] = y[i][1];
+    }
+    PrintVectors(masX, numberDivisions, "x");
+    PrintVectors(masY, numberDivisions, "y");
+    std::cout << "plot(x,y)" << std::endl;
+
+
+    //PrintVectors(t, numberDivisions, "t");
+    //PrintVectors(masX, numberDivisions, "x");
+    //std::cout << "plot(t,x)" << std::endl;
+
+
+    //PrintVectors(t, numberDivisions, "t");
+    //PrintVectors(masY, numberDivisions, "y");
+    //std::cout << "plot(t,y)" << std::endl;
+    delete[] y0;
+    delete[] y1;
+    delete[] y2;
+    delete[] t;
+    delete[] f;
+    for (int i = 0; i < numberDivisions; i++) { //очистка памяти решения системы
+        delete[] y[i];
+    }
+    delete[] y;
+
+    
+}
+
 int main()
 {
-    for (int i = 1000; i > 100; i--) {
-        std::pair<double, double> inaccuracy = testTask(i);
-        std::cout << inaccuracy.first << "," << inaccuracy.second << "\n";
-    }
+    //тестовая задача
+    // 
+    //const int n = 50;
+    //double x[n];
+    //double y[n];
+    //for (int i = 0; i < n; i++) {
+    //    std::pair<double, double> inaccuracy = testTask(i+100);
+    //    x[i] = inaccuracy.first;
+    //    y[i] = inaccuracy.second;
+    //   //std::cout << inaccuracy.first << "," << inaccuracy.second << "\n";
+    //}
+    //PrintVectors(x,n,"x");
+    //PrintVectors(y,n,"y");
+    //zadanie_41();
+
+
+    ////задача
+    predator_prey();
+
 }
 
 
